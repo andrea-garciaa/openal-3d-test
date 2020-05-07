@@ -32,6 +32,10 @@ static int listenx; // listener position, defined by mouse coordinates
 static int listeny;
 static int sourcex; // sound emitter position
 static int sourcey;
+static int base_source_x;
+static int base_source_y;
+static int base_window_x = DEFAULT_WIDTH;
+static int base_window_y = DEFAULT_HEIGHT;
 static float volume;
 static Sound sound;
 static int keeprunning;
@@ -104,9 +108,10 @@ int main(int argc, char** argv)
             printf("Failed to open: %s\n", argv[1]);
         }
     }
-
-    sourcex = 0;
-    sourcey = 0;
+    sourcex = DEFAULT_WIDTH / 2;
+    sourcey = DEFAULT_HEIGHT / 2;
+    base_source_x = sourcex;
+    base_source_y = sourcey;
     volume = 1.0f;
 
     while (keeprunning) {
@@ -175,7 +180,13 @@ void onWindowEvent(SDL_WindowEvent winevent)
         case SDL_WINDOWEVENT_RESIZED:
             width = winevent.data1;
             height = winevent.data2;
+            sourcex = (base_source_x * width) / base_window_x;
+            sourcey = (base_source_y * height) / base_window_y;
+            //printf("%d = (%d * %d) / %d\n", sourcex, base_source_x, width, base_window_x);
+            //printf("%d = (%d * %d) / %d\n", sourcey, base_source_y, height, base_window_y);
+            alSourceStop(sound.sourceID);
             printf("window resized to %dx%d\n", width, height);
+            printf("window source  %dx%d\n", sourcex, sourcey);
             break;
         default:
             break;
@@ -204,6 +215,12 @@ void onMouseButton(SDL_MouseButtonEvent btnevent)
         switch (btnevent.button) {
             case SDL_BUTTON_LEFT: // set sound source to mouse position
                 SDL_GetMouseState(&sourcex, &sourcey);
+                base_source_x = sourcex;
+                base_source_y = sourcey;
+                base_window_x = width;
+                base_window_y = height;
+                alSourceStop(sound.sourceID);
+                break;
         }
     }
 }
